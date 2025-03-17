@@ -1,41 +1,99 @@
 from datetime import date
-from ad_bs_converter import constants
+from functools import lru_cache
+
+
+from ad_bs_converter.exceptions import ADDateOutOfBoundsError
+from ad_bs_converter.constants import (
+    REFERENCE_AD_DATE,
+    MIN_AD_YEAR,
+    MAX_AD_YEAR,
+    START_BS_YEAR,
+    MONTH_NAMES,
+    NEPALI_YEARS,
+)
 from ad_bs_converter.domain import BSDate
-from ad_bs_converter.exception import ADDateOutOfBoundsError
 
 
 class ADToBSConverter:
     """
-    A class to convert an AD (Gregorian) date to a BS (Nepali) date.
+    Converts Gregorian (AD) dates to Bikram Sambat (BS) dates.
 
-    Attributes:
-        ad_date (date): The AD date to be converted.
-        cache_size (int): The size of the cache for storing previously calculated conversions.
-        bs_date (BSDate): The converted BS date.
-
-    Methods:
-        get_bs_date(): Returns the converted BS date.
-        get_formatted(): Returns the converted BS date as a string.
-        get_month_name(): Returns the name of the month in the BS calendar.
+    The converter uses a pre-defined lookup table for Nepali calendar data
+    from 1970 BS (1913 AD) to 2082 BS (2026 AD). It implements LRU caching
+    to improve performance for repeated conversions.
     """
 
     def __init__(self, ad_date: date, cache_size: int = 128) -> None:
         """
-        Initializes the AD to BS converter.
+        Initialize the converter with an AD date.
 
         Args:
-            ad_date (date): The AD date to be converted.
-            cache_size (int, optional): The cache size for storing previously calculated conversions. Defaults to 128.
+            ad_date: A datetime.date object representing a Gregorian (AD) date
+            cache_size: Size of the LRU cache for storing conversion results (default: 128)
 
         Raises:
-            ValueError: If the year data in the constants is inconsistent or invalid.
-            ADDateOutOfBoundsError: If the provided AD date is out of the allowed range.
+            ADDateOutOfBoundsError: If the provided date is outside the supported range
         """
         self._ad_date = ad_date
         self._cache_size = cache_size
+
+        # Configure the cache size for the convert method
+        self._configure_cache(cache_size)
+
         self._validate_data()
         self._validate_ad_date()
-        self._bs_date = self._convert()
+        self._bs_date = self._convert(self._ad_date)
+
+    def _configure_cache(self, cache_size: int) -> None:
+        """
+        Configure the LRU cache size for the convert method.
+
+        Args:
+            cache_size: The maximum size of the LRU cache
+        """
+        # We need to reconfigure the cache if the size changes
+        if hasattr(self._convert, "cache_clear"):
+            self._convert.cache_clear()
+
+        # Create a new decorated function with the specified cache size
+        self._convert = lru_cache(maxsize=cache_size)(self._raw_convert)
+
+    @lru_cache(maxsize=128)  # Default cache size
+    def _raw_convert(self, ad_date: date) -> BSDate:
+        """
+        Convert the AD date to BS date.
+
+        Args:
+            ad_date: A datetime.date object representing a Gregorian (AD) date
+
+        Returns:
+            BSDate: The equivalent Bikram Sambat date
+
+        Raises:
+            ADDateOutOfBoundsError: If the calculation results in a BS year with no data
+        """
+        delta_days = (ad_date - REFERENCE_AD_DATE).days
+
+        bs_year = START_BS_YEAR
+        bs_month = 1
+        bs_day = 1
+
+        while bs_year in NEPALI_YEARS and delta_days >= NEPALI_YEARS[bs_year][0]:
+            delta_days -= NEPALI_YEARS[bs_year][0]
+            bs_year += 1
+
+        if bs_year not in NEPALI_YEARS:
+            raise ADDateOutOfBoundsError(f"No data available for BS year {bs_year}")
+
+        for month in range(1, 13):
+            month_days = NEPALI_YEARS[bs_year][month]
+            if delta_days < month_days:
+                bs_month = month
+                bs_day = delta_days + 1
+                break
+            delta_days -= month_days
+
+        return BSDate(year=bs_year, month=bs_month, day=bs_day)
 
     def _validate_data(self) -> None:
         """
@@ -47,7 +105,7 @@ class ADToBSConverter:
         Raises:
             ValueError: If there is an inconsistency or invalid data in the year data.
         """
-        for year, days in constants.NEPALI_YEARS.items():
+        for year, days in NEPALI_YEARS.items():
             if len(days) != 13:
                 raise ValueError(
                     f"Invalid data for year {year}: expected 13 elements, got {len(days)}"
@@ -62,98 +120,20 @@ class ADToBSConverter:
                     f"Data inconsistency for year {year}: sum of months {month_sum} != total {days[0]}"
                 )
 
-    def _convert(self) -> BSDate:
-        """
-        Converts the given AD date to a BS date.
-
-        The method calculates the number of days since the reference AD date, and then uses the
-        Nepali calendar data to determine the corresponding BS year, month, and day.
-
-        Returns:
-            BSDate: The corresponding BS date.
-
-        Raises:
-            ADDateOutOfBoundsError: If the provided AD date cannot be converted to a BS date due to out-of-bounds error.
-        """
-        delta_days = (self._ad_date - constants.REFERENCE_AD_DATE).days
-
-        bs_year = constants.START_BS_YEAR
-        bs_month = 1
-        bs_day = 1
-
-        while (
-            bs_year in constants.NEPALI_YEARS
-            and delta_days >= constants.NEPALI_YEARS[bs_year][0]
-        ):
-            delta_days -= constants.NEPALI_YEARS[bs_year][0]
-            bs_year += 1
-
-        if bs_year not in constants.NEPALI_YEARS:
-            raise ADDateOutOfBoundsError(
-                message=f"No data available for BS year {bs_year}",
-            )
-
-        for month in range(1, 13):
-            month_days = constants.NEPALI_YEARS[bs_year][month]
-            if delta_days < month_days:
-                bs_month = month
-                bs_day = delta_days + 1
-                break
-            delta_days -= month_days
-
-        return BSDate(year=bs_year, month=bs_month, day=bs_day)
-
     def _validate_ad_date(self) -> None:
         """
-        Validates that the AD date is within the valid range and not before the earliest supported date.
+        Validate that the AD date is within the supported range.
 
         Raises:
-            ADDateOutOfBoundsError: If the AD date is outside the supported range.
+            ADDateOutOfBoundsError: If the date is outside the supported range
         """
         if not self._is_date_in_range():
             raise ADDateOutOfBoundsError(
-                message=f"Date must be between {constants.MIN_AD_YEAR} and {constants.MAX_AD_YEAR}",
+                f"Date must be between {MIN_AD_YEAR} and {MAX_AD_YEAR}"
             )
 
-        if (self._ad_date - constants.REFERENCE_AD_DATE).days < 0:
-            raise ADDateOutOfBoundsError(
-                message="Date is before the earliest supported date",
-            )
-
-    def get_bs_date(self) -> BSDate:
-        """
-        Returns the converted BS date.
-
-        Returns:
-            BSDate: The converted BS date.
-        """
-        return self._bs_date
-
-    def get_formatted(self) -> str:
-        """
-        Returns the converted BS date as a formatted string.
-
-        Returns:
-            str: The BS date formatted as a string.
-        """
-        return str(self._bs_date)
-
-    def get_month_name(self) -> str:
-        """
-        Returns the name of the month in the BS calendar.
-
-        Args:
-            None
-
-        Returns:
-            str: The name of the month in the BS calendar.
-
-        Raises:
-            ValueError: If the month number is not valid.
-        """
-        if 1 <= self._bs_date.month <= 12:
-            return constants.MONTH_NAMES[self._bs_date.month - 1]
-        raise ValueError("Invalid Month")
+        if (self._ad_date - REFERENCE_AD_DATE).days < 0:
+            raise ADDateOutOfBoundsError("Date is before the earliest supported date")
 
     def _is_date_in_range(self) -> bool:
         """
@@ -162,4 +142,61 @@ class ADToBSConverter:
         Returns:
             bool: True if the date is within the valid range, False otherwise.
         """
-        return constants.MIN_AD_YEAR <= self._ad_date.year <= constants.MAX_AD_YEAR
+        return MIN_AD_YEAR <= self._ad_date.year <= MAX_AD_YEAR
+
+    def get_bs_date(self) -> BSDate:
+        """
+        Get the converted BS date.
+
+        Returns:
+            BSDate: The equivalent Bikram Sambat date
+        """
+        return self._bs_date
+
+    def get_formatted(self) -> str:
+        """
+        Get the formatted string representation of the BS date.
+
+        Returns:
+            str: BS date in YYYY-MM-DD format
+        """
+        return str(self._bs_date)
+
+    def get_month_name(self) -> str:
+        """
+        Get the Nepali name of the month for the BS date.
+
+        Returns:
+            str: Nepali month name
+
+        Raises:
+            ValueError: If the month is invalid
+        """
+        if 1 <= self._bs_date.month <= 12:
+            return MONTH_NAMES[self._bs_date.month - 1]
+        raise ValueError("Invalid Month")
+
+    @classmethod
+    def clear_cache(cls) -> None:
+        """
+        Clear the conversion cache.
+
+        This method can be used to free up memory if many conversions have been performed.
+        """
+        # This is a class method that tries to clear the cache of any instance
+        for instance in cls.__dict__.values():
+            if hasattr(instance, "cache_clear"):
+                instance.cache_clear()
+
+    @staticmethod
+    def get_cache_info():
+        """
+        Get information about the current state of the cache.
+
+        Returns:
+            CacheInfo: A named tuple with cache statistics
+        """
+        # This is a static method that returns cache info of the raw_convert method
+        if hasattr(ADToBSConverter._raw_convert, "cache_info"):
+            return ADToBSConverter._raw_convert.cache_info()
+        return None
