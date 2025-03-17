@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="ad_bs_converter",
-    version="0.1.0",
+    version="0.1.1",
     description="A Python package that converts between the Nepali (Bikram Sambat) and Gregorian (AD) calendars. This tool is useful for applications that require date conversion between these two calendar systems commonly used in Nepal. The package includes functionality to convert a given AD date to the corresponding BS date and vice versa.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
