@@ -183,7 +183,6 @@ class ADToBSConverter:
 
         This method can be used to free up memory if many conversions have been performed.
         """
-        # This is a class method that tries to clear the cache of any instance
         for instance in cls.__dict__.values():
             if hasattr(instance, "cache_clear"):
                 instance.cache_clear()
@@ -196,7 +195,6 @@ class ADToBSConverter:
         Returns:
             CacheInfo: A named tuple with cache statistics
         """
-        # This is a static method that returns cache info of the raw_convert method
         if hasattr(ADToBSConverter._raw_convert, "cache_info"):
             return ADToBSConverter._raw_convert.cache_info()
         return None
