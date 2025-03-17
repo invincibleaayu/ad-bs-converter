@@ -1,6 +1,6 @@
 [project]
 name = "ad_bs_converter"
-version = "1.2.2"
+version = "1.2.3"
 description = "A Python package to convert AD dates to BS dates."
 readme = "README.md"
 authors = [

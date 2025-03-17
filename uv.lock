@@ -3,7 +3,7 @@ requires-python = ">=3.13"
 
 [[package]]
 name = "ad-bs-converter"
-version = "1.2.2"
+version = "1.2.3"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
