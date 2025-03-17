@@ -88,7 +88,7 @@ For more detailed documentation including:
 - Implementation details
 - Calendar data sources
 
-Please refer to the github link [Aayush Dip Giri](https://github.com/invincibleaayu/ad-bs-converter).
+Please refer to the github link [Aayush Dip Giri](https://github.com/invincibleaayu/ad_bs_converter).
 
 ## License
 
