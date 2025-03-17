@@ -1,0 +1,21 @@
+[project]
+name = "ad_bs_converter"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Aayush Dip Giri", email = "giridip862101@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "pydantic>=2.10.6",
+    "setuptools>=76.0.0",
+    "twine>=6.1.0",
+]
+
+[project.scripts]
+ad_bs_converter = "ad_bs_converter:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

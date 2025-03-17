@@ -2,8 +2,8 @@ from datetime import date
 from functools import lru_cache
 
 
-from ad_bs_converter.exceptions import ADDateOutOfBoundsError
-from ad_bs_converter.constants import (
+from src.ad_bs_converter.exceptions import ADDateOutOfBoundsError
+from src.ad_bs_converter.constants import (
     REFERENCE_AD_DATE,
     MIN_AD_YEAR,
     MAX_AD_YEAR,
@@ -11,7 +11,7 @@ from ad_bs_converter.constants import (
     MONTH_NAMES,
     NEPALI_YEARS,
 )
-from ad_bs_converter.domain import BSDate
+from src.ad_bs_converter.domain import BSDate
 
 
 class ADToBSConverter:
@@ -36,6 +36,7 @@ class ADToBSConverter:
         """
         self._ad_date = ad_date
         self._cache_size = cache_size
+        self._convert = self._raw_convert
 
         # Configure the cache size for the convert method
         self._configure_cache(cache_size)

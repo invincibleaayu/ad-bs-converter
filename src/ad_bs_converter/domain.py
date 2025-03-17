@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from ad_bs_converter import constants
+from src.ad_bs_converter import constants
 
 
 class BSDate(BaseModel):
