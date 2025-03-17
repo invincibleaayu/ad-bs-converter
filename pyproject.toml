@@ -1,7 +1,7 @@
 [project]
 name = "ad_bs_converter"
-version = "0.1.0"
-description = "Add your description here"
+version = "1.2.2"
+description = "A Python package to convert AD dates to BS dates."
 readme = "README.md"
 authors = [
     { name = "Aayush Dip Giri", email = "giridip862101@gmail.com" }
@@ -12,10 +12,23 @@ dependencies = [
     "setuptools>=76.0.0",
     "twine>=6.1.0",
 ]
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+]
+keywords = ["date-converter", "ad-to-bs", "nepali-date"]
+
+[project.urls]
+"Bug Tracker" = "https://github.com/your-username/ad_bs_converter/issues"
+"Documentation" = "https://github.com/your-username/ad_bs_converter#readme"
+"Source Code" = "https://github.com/your-username/ad_bs_converter"
 
 [project.scripts]
 ad_bs_converter = "ad_bs_converter:main"
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
