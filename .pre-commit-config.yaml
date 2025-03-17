@@ -1,0 +1,57 @@
+repos:
+  # pre-commit hooks for various checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: detect-aws-credentials
+        args: ["--allow-missing-credentials"]
+      - id: detect-private-key
+      - id: check-added-large-files
+      - id: check-symlinks
+      - id: check-merge-conflict
+      - id: check-yaml
+        args: ["--unsafe", "--allow-multiple-documents"]
+      - id: debug-statements
+
+  # Codespell check for common misspellings
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.3.0
+    hooks:
+      - id: codespell
+        name: codespell
+        description: Checks for common misspellings in text files.
+        entry: codespell
+        language: python
+        types: [text]
+
+  # Ruff linter and formatter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.5.2
+    hooks:
+      # Run the linter.
+      - id: ruff
+        args: ["--fix", "--exclude", "tests"]
+      # Run the formatter.
+      - id: ruff-format
+
+  # Bandit for security checks
+  - repo: https://github.com/PyCQA/bandit
+    rev: "1.7.9"
+    hooks:
+      - id: bandit
+        args: ["--exclude", "tests"]
+
+  # Python safety checks for dependencies
+  - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
+    rev: v1.3.3
+    hooks:
+      - id: python-safety-dependencies-check
+        args: ["--ignore", "70612, 71167, 71064, 71199, 71608"]
+        files: requirements.lock
+
+  # Commitizen for commit message formatting
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.27.0
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
