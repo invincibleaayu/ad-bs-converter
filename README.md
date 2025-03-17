@@ -17,7 +17,7 @@ This library provides functionality to convert dates from the Gregorian calendar
 ## Installation
 
 ```bash
-pip install ad_bs_converter
+pip install ad-bs-converter
 ```
 
 ## Usage

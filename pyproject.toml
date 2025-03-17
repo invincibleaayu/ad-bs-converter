@@ -22,9 +22,9 @@ classifiers = [
 keywords = ["date-converter", "ad-to-bs", "nepali-date"]
 
 [project.urls]
-"Bug Tracker" = "https://github.com/your-username/ad_bs_converter/issues"
-"Documentation" = "https://github.com/your-username/ad_bs_converter#readme"
-"Source Code" = "https://github.com/your-username/ad_bs_converter"
+"Bug Tracker" = "https://github.com/invincibleaayu/ad_bs_converter/issues"
+"Documentation" = "https://github.com/invincibleaayu/ad_bs_converter#readme"
+"Source Code" = "https://github.com/invincibleaayu/ad_bs_converter"
 
 [project.scripts]
 ad_bs_converter = "ad_bs_converter:main"
